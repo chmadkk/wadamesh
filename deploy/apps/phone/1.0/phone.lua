@@ -18,7 +18,7 @@ local C = ui.colors
 local app = {}
 
 local SYM_CALL, SYM_LIST, SYM_MAIL, SYM_GEAR = "\u{F095}", "\u{F00B}", "\u{F0E0}", "\u{F013}"
-local SYM_BACK, SYM_MUTE, SYM_VOLDN, SYM_VOLUP = "\u{F55A}", "\u{F026}", "\u{F027}", "\u{F028}"
+local SYM_BACK, SYM_VOLDN, SYM_VOLUP = "\u{F55A}", "\u{F027}", "\u{F028}"
 
 local W, H, LH
 local HDR_H, TAB_H, PAD = 38, 34, 6
@@ -344,9 +344,12 @@ local function view_call()
   y = y + 96 + PAD + 4
 
   local bw = math.floor((W - 2 * PAD - 2 * 6) / 3)
-  ui.button(muted and (SYM_MUTE .. " Til") or (SYM_MUTE .. " Fra"), PAD, y, bw, 38, function()
+  -- Microphone mute. The label says what a tap does; while muted the button is
+  -- filled, so it is obvious the other side cannot hear you.
+  local mb = ui.button(muted and "Mik til" or "Mik fra", PAD, y, bw, 38, function()
     muted = not muted; cell.mute(muted); show("call")
   end)
+  if muted then filled(mb) end
   ui.button(SYM_VOLDN, PAD + bw + 6, y, bw, 38, function()
     vol = math.max(0, vol - 1); cell.volume(vol); sys.toast("Lydstyrke " .. vol)
   end)
