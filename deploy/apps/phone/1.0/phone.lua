@@ -96,6 +96,16 @@ local function sub_line(s)
   return "4G  ·  " .. (s.rssi ~= 0 and (s.rssi .. " dBm") or "intet signal")
 end
 
+-- A filled (primary / selected) button. Fill with the text colour and write in
+-- the ground colour: on 1-bit e-paper the host inverts app colours, so this is
+-- black with white text there and light with dark text on a colour screen. A
+-- coloured fill (accent, good, bad) came out black with black text on e-paper.
+local function filled(b)
+  b:bg(C.text, C.text)
+  b:color(C.bg)
+  return b
+end
+
 local function fmt_secs(n)
   return string.format("%d:%02d", n // 60, n % 60)
 end
@@ -147,7 +157,7 @@ local function tabs()
   local y = H - TAB_H
   for i, t in ipairs(TABS) do
     local b = ui.button(t.sym, PAD + (i - 1) * (tw + 4), y, tw, TAB_H - 4, function() show(t.id) end)
-    if t.id == view then b:bg(C.accent, C.text) end
+    if t.id == view then filled(b) end
   end
 end
 
@@ -207,7 +217,7 @@ local function view_dial()
   end
   y = y + 4 * kh + 3 * gap + PAD
   local cb = ui.button(SYM_CALL .. "  Ring op", PAD, y, W - 2 * PAD, call_h, dial_now)
-  cb:bg(C.good, C.text)
+  filled(cb)
 end
 
 local function view_recent()
@@ -281,7 +291,7 @@ local function view_settings()
   local b = ui.button(s.enabled and "Sluk" or "Tænd", PAD, y, b3, bh, function()
     if say(cell.enable(not st().enabled)) then show("settings") end
   end)
-  if not s.enabled then b:bg(C.good, C.text) end
+  if not s.enabled then filled(b) end
   ui.button(s.data and "Data fra" or "Data til", PAD + b3 + gap, y, b3, bh, function()
     if say(cell.data(not st().data)) then sys.toast("Arbejder...") end
   end)
@@ -353,10 +363,10 @@ local function view_call()
   local by = H - PAD - 48
   if s.call == "incoming" then
     local hw = math.floor((W - 2 * PAD - 8) / 2)
-    ui.button(SYM_CALL .. "  Svar", PAD, by, hw, 48, function() cell.answer() end):bg(C.good, C.text)
-    ui.button("Afvis", PAD + hw + 8, by, hw, 48, function() cell.hangup() end):bg(C.bad, C.text)
+    filled(ui.button(SYM_CALL .. "  Svar", PAD, by, hw, 48, function() cell.answer() end))
+    ui.button("Afvis", PAD + hw + 8, by, hw, 48, function() cell.hangup() end)   -- outlined: not the default
   else
-    ui.button(SYM_CALL .. "  Læg på", PAD, by, W - 2 * PAD, 48, function() cell.hangup() end):bg(C.bad, C.text)
+    filled(ui.button(SYM_CALL .. "  Læg på", PAD, by, W - 2 * PAD, 48, function() cell.hangup() end))
   end
   update_call()
 end

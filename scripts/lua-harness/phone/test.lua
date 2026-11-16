@@ -55,7 +55,7 @@ end
 local function widget(kind, text)
   local o = { kind = kind, text = text }
   function o:set(t) assert(type(t) == "string", kind .. ":set wants a string"); self.text = t; label_sets = label_sets + 1 end
-  function o:color(c) int(c, kind .. " color") end
+  function o:color(c) int(c, kind .. " color"); self.fg = c end
   function o:bg(c, b) int(c, kind .. " bg"); self.bgc = c end
   function o:width(v) int(v, kind .. " width") end
   function o:pos() end
@@ -175,6 +175,10 @@ guarded(app.on_open, SCREEN_W, SCREEN_H)
 check(has_label("Modem slukket"), "status card says the modem is off")
 check(buttons["Tænd"] ~= nil, "opens on the modem page with a power button")
 check(buttons[CALL] and buttons[LIST] and buttons[MAIL] and buttons[GEAR], "four tabs at the bottom")
+-- A filled button must not write in its own fill colour (that was black on black on e-paper).
+local function readable(b) return b.bgc == nil or (b.fg ~= nil and b.fg ~= b.bgc) end
+check(buttons[GEAR].bgc ~= nil and readable(buttons[GEAR]), "selected tab is filled with readable text")
+check(readable(buttons["Tænd"]), "primary button text is readable")
 
 print("turn the modem on, registration arrives")
 press("Tænd")
@@ -200,6 +204,7 @@ press(CALL .. "  Ring op")
 check(dialed[1] == "1234", "dials the typed number (got " .. tostring(dialed[1]) .. ")")
 check(storekv.recent == "1234", "number saved to recent calls")
 check(buttons[CALL .. "  Læg på"] ~= nil, "call screen with Hang up")
+check(readable(buttons[CALL .. "  Læg på"]), "hang-up button text is readable")
 
 print("call progress")
 status.call, status.number = "alerting", "1234"
