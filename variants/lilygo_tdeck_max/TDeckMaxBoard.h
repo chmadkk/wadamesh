@@ -117,11 +117,6 @@ public:
   // cannot pull the mux back to the ES8311 in the middle of a call.
   void setModemAudio(bool on);
   bool modemAudioActive() const { return modem_audio_; }
-  // Loudspeaker during a call. Off keeps the modem's audio on the speaker but
-  // with the NS4150B amplifier switched off: quiet enough to hold to the ear
-  // (the Max has no earpiece or headset jack). Remembered for later calls.
-  void setModemSpeaker(bool loud);
-  bool modemSpeakerLoud() const { return modem_loud_; }
 
   ExtensionIOXL9555 io_expander;
   GaugeBQ27220 gauge;
@@ -131,6 +126,5 @@ private:
   bool gps_on_ = false;
   volatile bool modem_rail_on_ = false;
   volatile bool modem_audio_ = false;
-  volatile bool modem_loud_ = true;
   SemaphoreHandle_t expander_mutex_ = nullptr;
 };

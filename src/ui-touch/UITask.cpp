@@ -78053,14 +78053,6 @@ static void callSheetBuild(int state, const char* number) {
     lv_obj_t* h = callSheetButton(s_call_sheet, TR("Hang up"), COLOR_STATUS_DANGER, COLOR_ON_GLOW, W - 24,
                                   []() { cellHangup(); });
     lv_obj_align(h, LV_ALIGN_BOTTOM_MID, 0, -24);
-    // Loud (hands-free) or quiet (amplifier off, hold to the ear). The label
-    // names what a tap switches TO; the sheet is rebuilt so it follows.
-    lv_obj_t* sp = callSheetButton(s_call_sheet, cellSpeakerLoud() ? TR("Speaker off") : TR("Speaker on"),
-                                   COLOR_BG, COLOR_TEXT, W - 24, []() {
-                                     cellSetSpeaker(!cellSpeakerLoud());
-                                     s_call_sheet_state = -1;   // rebuild on the next pass with the new label
-                                   });
-    lv_obj_align(sp, LV_ALIGN_BOTTOM_MID, 0, -24 - 54 - 10);
   }
   s_call_sheet_state = state;
 }

@@ -136,10 +136,6 @@ bool cellHangup();
 bool cellDtmf(char digit);
 bool cellSetVolume(int level);                // 0..5
 bool cellSetMute(bool mute);
-// Loud (amplifier on, hands-free) or quiet (amplifier off, hold to the ear).
-// Applies at once during a call and is kept for the next ones.
-void cellSetSpeaker(bool loud);
-bool cellSpeakerLoud();
 bool cellSmsSend(const char* number, const char* utf8_text);
 bool cellDataConnect(bool up);
 

@@ -988,8 +988,6 @@ bool cellSetVolume(int level) {
   Cmd c = {}; c.type = CMD_VOLUME; c.arg = (int16_t)level; return queueCmd(c);
 }
 bool cellSetMute(bool mute) { Cmd c = {}; c.type = CMD_MUTE; c.arg = mute; return queueCmd(c); }
-void cellSetSpeaker(bool loud) { board.setModemSpeaker(loud); }   // XL9555 write, mutex-guarded
-bool cellSpeakerLoud() { return board.modemSpeakerLoud(); }
 
 bool cellSmsSend(const char* number, const char* text) {
   if (!validNumber(number) || !text || !*text) return false;
