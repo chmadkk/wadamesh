@@ -3540,6 +3540,7 @@ int cellStatus(lua_State* L) {
   lua_pushstring(L, st.ip);                     lua_setfield(L, -2, "ip");
   lua_pushstring(L, st.apn);                    lua_setfield(L, -2, "apn");
   lua_pushstring(L, st.last_error);             lua_setfield(L, -2, "error");
+  lua_pushboolean(L, cellSpeakerLoud());        lua_setfield(L, -2, "speaker");
   return 1;
 }
 
@@ -3589,6 +3590,9 @@ int cellDtmfL(lua_State* L) {
 
 int cellVolumeL(lua_State* L) { return cellPushResult(L, cellSetVolume((int)luaL_checkinteger(L, 1)), "modem busy"); }
 int cellMuteL(lua_State* L)   { return cellPushResult(L, cellSetMute(lua_toboolean(L, 1)), "modem busy"); }
+// wada.cell.speaker(loud) -- hands-free (true) or quiet, hold to the ear (false).
+// Ungated like mute: it only changes how loud a call the user is in sounds.
+int cellSpeakerL(lua_State* L) { cellSetSpeaker(lua_toboolean(L, 1)); lua_pushboolean(L, 1); return 1; }
 
 // wada.cell.sms(number, text) -- one SMS, at most 70 characters (UCS2).
 int cellSmsL(lua_State* L) {
@@ -3906,6 +3910,7 @@ void openWada(lua_State* L) {
   lua_pushcfunction(L, cellDtmfL);     lua_setfield(L, -2, "dtmf");
   lua_pushcfunction(L, cellVolumeL);   lua_setfield(L, -2, "volume");
   lua_pushcfunction(L, cellMuteL);     lua_setfield(L, -2, "mute");
+  lua_pushcfunction(L, cellSpeakerL);  lua_setfield(L, -2, "speaker");
   lua_pushcfunction(L, cellSmsL);      lua_setfield(L, -2, "sms");        // consent-gated
   lua_pushcfunction(L, cellDataL);     lua_setfield(L, -2, "data");       // consent-gated
   lua_pushcfunction(L, cellRequestL);  lua_setfield(L, -2, "request");    // consent-gated

@@ -354,8 +354,16 @@ local function view_call()
     vol = math.min(5, vol + 1); cell.volume(vol); sys.toast("Lydstyrke " .. vol)
   end)
   y = y + 44
-  ui.button("Tastatur (DTMF)", PAD, y, W - 2 * PAD, 34, function()
-    input("Taster", "", function(t)
+  -- Loud = hands-free (amplifier on). Quiet = amplifier off: hold it to the ear.
+  local half = math.floor((W - 2 * PAD - 6) / 2)
+  local loud = s.speaker ~= false
+  local sp = ui.button(loud and (SYM_VOLUP .. " Højttaler") or (SYM_VOLDN .. " Til øret"), PAD, y, half, 34, function()
+    cell.speaker(not loud)
+    show("call")
+  end)
+  if loud then filled(sp) end
+  ui.button("Taster", PAD + half + 6, y, half, 34, function()
+    input("Taster (DTMF)", "", function(t)
       if t then for d in t:gmatch("[%d%*#]") do cell.dtmf(d) end end
     end, 20)
   end)

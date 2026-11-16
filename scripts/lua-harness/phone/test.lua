@@ -64,7 +64,7 @@ end
 
 local status = {
   enabled = false, power = "off", sim = "unknown", reg = "none", call = "idle", number = "",
-  call_secs = 0, csq = -1, rssi = 0, bars = 0, operator = "", data = false, ip = "", apn = "", error = "",
+  speaker = true, call_secs = 0, csq = -1, rssi = 0, bars = 0, operator = "", data = false, ip = "", apn = "", error = "",
 }
 local dialed, sent_sms, granted, dtmf = {}, {}, true, {}
 local http_cb = nil
@@ -127,6 +127,7 @@ wada = {
     dtmf = function(d) dtmf[#dtmf + 1] = d; return true end,
     volume = function(v) int(v, "volume"); return true end,
     mute = function() return true end,
+    speaker = function(loud) status.speaker = loud and true or false; return true end,
     sms = function(n, t) local ok, e = gate(); if ok then sent_sms[#sent_sms + 1] = { n, t } end; return ok, e end,
     data = function(up) return gate() end,
     inbox = function(max)
@@ -217,7 +218,12 @@ check(has_label("1:05"), "duration shown in 5 s steps")
 press("\u{F028}")
 press("\u{F026} Fra")
 check(buttons["\u{F026} Til"] ~= nil, "mute toggles its label")
-press("Tastatur (DTMF)")
+check(buttons["\u{F028} Højttaler"] ~= nil, "call starts on the loudspeaker")
+press("\u{F028} Højttaler")
+check(status.speaker == false and buttons["\u{F027} Til øret"] ~= nil, "speaker button switches to quiet (to the ear)")
+press("\u{F027} Til øret")
+check(status.speaker == true, "and back to the loudspeaker")
+press("Taster")
 answer_input("1#9")
 check(table.concat(dtmf) == "1#9", "DTMF digits sent")
 status.call, status.call_secs, status.number = "idle", 0, ""

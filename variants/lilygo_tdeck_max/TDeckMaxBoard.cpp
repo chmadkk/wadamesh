@@ -123,12 +123,18 @@ void TDeckMaxBoard::setModemAudio(bool on) {
   modem_audio_ = on;
   if (on) {
     xlWrite(TDMAX_XL_AUDIO_SEL, true);
-    xlWrite(TDMAX_XL_AMP_EN, true);
+    xlWrite(TDMAX_XL_AMP_EN, modem_loud_);
   } else {
     xlWrite(TDMAX_XL_AMP_EN, false);
     xlWrite(TDMAX_XL_AUDIO_SEL, false);
   }
-  Serial.printf("[MAXAUDIO] speaker -> %s\n", on ? "modem (call)" : "es8311");
+  Serial.printf("[MAXAUDIO] speaker -> %s\n", on ? (modem_loud_ ? "modem (call, loud)" : "modem (call, quiet)") : "es8311");
+}
+
+void TDeckMaxBoard::setModemSpeaker(bool loud) {
+  modem_loud_ = loud;
+  if (modem_audio_) xlWrite(TDMAX_XL_AMP_EN, loud);   // only touch the amp while a call owns it
+  Serial.printf("[MAXAUDIO] call speaker %s\n", loud ? "loud (amp on)" : "quiet (amp off)");
 }
 
 void TDeckMaxBoard::setAmpEnabled(bool on) {
