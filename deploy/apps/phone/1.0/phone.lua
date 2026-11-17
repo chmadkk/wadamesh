@@ -329,8 +329,48 @@ local function update_call()
   end
 end
 
+-- In-call keypad: DTMF goes to the far end as network signalling (AT+VTS),
+-- so it makes no sound here and the modem has no local tone. The keys sent so
+-- far are shown instead, so it is clear they went.
+local dtmf_open, dtmf_sent = false, ""
+
+local function view_call_keypad(s)
+  local y = body_top()
+  -- compact caller line + what has been sent
+  ui.panel(PAD, y, W - 2 * PAD, 44, C.panel, 10)
+  local who = s.number ~= "" and s.number or (number ~= "" and number or "Ukendt nummer")
+  label(who, PAD + 10, y + 4, 14, C.text, true)
+  w.state = label("", W - PAD - 92, y + 4, 12, C.accent)
+  w.dur = label("", W - PAD - 92, y + 4 + LH, 12, C.sub)
+  w.tones = label(dtmf_sent ~= "" and dtmf_sent or "Tryk taster", PAD + 10, y + 4 + LH + 2, 14,
+                  dtmf_sent ~= "" and C.text or C.sub)
+  y = y + 44 + PAD
+
+  local by = H - PAD - 44
+  local rows = { { "1", "2", "3" }, { "4", "5", "6" }, { "7", "8", "9" }, { "*", "0", "#" } }
+  local gap = 4
+  local kh = math.floor((by - PAD - y - 3 * gap) / 4)
+  local kw = math.floor((W - 2 * PAD - 2 * gap) / 3)
+  for r, row in ipairs(rows) do
+    for c, d in ipairs(row) do
+      ui.button(d, PAD + (c - 1) * (kw + gap), y + (r - 1) * (kh + gap), kw, kh, function()
+        if cell.dtmf(d) then
+          dtmf_sent = (dtmf_sent .. d):sub(-14)
+          put(w.tones, dtmf_sent)
+          w.tones:color(C.text)
+        end
+      end)
+    end
+  end
+  local hw = math.floor((W - 2 * PAD - 8) / 2)
+  ui.button("Skjul", PAD, by, hw, 44, function() dtmf_open = false; show("call") end)
+  filled(ui.button(SYM_CALL .. "  Læg på", PAD + hw + 8, by, hw, 44, function() cell.hangup() end))
+  update_call()
+end
+
 local function view_call()
   local s = st()
+  if dtmf_open and s.call ~= "incoming" then return view_call_keypad(s) end
   local y = body_top() + 6
   -- caller card
   ui.panel(PAD, y, W - 2 * PAD, 96, C.panel, 14)
@@ -357,11 +397,9 @@ local function view_call()
     vol = math.min(5, vol + 1); cell.volume(vol); sys.toast("Lydstyrke " .. vol)
   end)
   y = y + 44
-  ui.button("Tastatur (DTMF)", PAD, y, W - 2 * PAD, 34, function()
-    input("Taster", "", function(t)
-      if t then for d in t:gmatch("[%d%*#]") do cell.dtmf(d) end end
-    end, 20)
-  end)
+  if s.call ~= "incoming" then
+    ui.button("Taster", PAD, y, W - 2 * PAD, 34, function() dtmf_open = true; show("call") end)
+  end
 
   local by = H - PAD - 48
   if s.call == "incoming" then
@@ -396,6 +434,7 @@ end
 function app.on_cell(ev)
   if ev.type == "call" then
     if ev.state == "idle" then
+      dtmf_open, dtmf_sent = false, ""
       if view == "call" then sys.toast("Opkald afsluttet"); show("dial") end
     elseif view ~= "call" then
       if ev.state == "incoming" and ev.number ~= "" then remember_number(ev.number) end
@@ -422,7 +461,17 @@ end
 
 -- Hardware keyboard: digits go straight into the dial pad.
 function app.on_input(ev)
-  if ev.type ~= "key" or prompt_open or view ~= "dial" or not ev.key then return end
+  if ev.type ~= "key" or prompt_open or not ev.key then return end
+  if view == "call" and dtmf_open then   -- hardware keys send DTMF while the keypad is up
+    local k = ev.key
+    if k:match("^[%d%*#]$") and cell.dtmf(k) then
+      dtmf_sent = (dtmf_sent .. k):sub(-14)
+      put(w.tones, dtmf_sent)
+      if w.tones then w.tones:color(C.text) end
+    end
+    return
+  end
+  if view ~= "dial" then return end
   local k = ev.key
   if k:match("^[%d%*#%+]$") then
     local was_empty = number == ""
